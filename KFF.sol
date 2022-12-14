@@ -851,7 +851,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
             // ADD TO PHILANTHROPIST LIST
         if (msg.value > cost * _mintAmount) {
             PhilanthropistList[msg.sender] = true;
-            PhilanthropistAmount[msg.sender] = msg.value;
+            PhilanthropistAmount[msg.sender] = msg.value - (cost * _mintAmount);
         }
             // SPLIT PAYMENTS
         payable(receiverOne).transfer(msg.value/9);
