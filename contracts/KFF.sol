@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -21,7 +21,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     bool public isPaused = false;
     mapping(address => bool) public philanthropistList;
     mapping(address => uint256) public philanthropistAmount;
-    address public receiverOne = 0x74bbE5F19b334b4d9Aa3a7a4b03AaAeC98a0Eb0f;
+    address public receiverOne = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;
     mapping(uint256 => uint256) public hodlStart;
     mapping(uint256 => string) public roles;
     mapping(uint256 => uint256) public ranking;
@@ -134,10 +134,10 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         return block.timestamp - _hodlStart;
     }
 
-        // GET RANKING
-    function getRanking(uint256 tokenId) public view returns (uint256) {
+        // GET RANKING AND ROLE
+    function getRankingAndRole(uint256 tokenId) public view returns (uint256, string memory) {
         require(_exists(tokenId), "Token number does not exist");
-        return ranking[tokenId];
+        return (ranking[tokenId], roles[tokenId]);
     }
 
         // SET ROLE/TITLE
