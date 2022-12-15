@@ -52,35 +52,23 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         require(msg.value >= cost * _mintAmount, "Not enough eth");
 
         for (uint256 i = 1; i <= _mintAmount; i++) {
+            hodlStart[supply + i] = block.timestamp;
+            ranking[supply + i] = 0;
+            roles[supply + i] = "No Role";
             _safeMint(_to, supply + i);
-        }
-
-            // INITIALIZE HODLSTART
-        for (uint256 j = 1; j <= _mintAmount; j++) {
-            hodlStart[supply + j] = block.timestamp;
-        }
-
-            // INITIALIZE RANKING (EVERY TOKEN IS MINTED AS RANK 0)
-        for (uint256 k = 1; k <= _mintAmount; k++) {
-            ranking[supply + k] = 0;
-        }
-
-            // INITIALIZE ROLES (EVERY TOKEN IS MINTED AS NO ROLE)
-        for (uint256 l = 1; l <= _mintAmount; l++) {
-            roles[supply + l] = "No Role";
         }
 
             // ADD TO PHILANTHROPIST LIST
         if (msg.value > cost * _mintAmount) {
             philanthropistList[msg.sender] = true;
-            philanthropistAmount[msg.sender] = msg.value - (cost * _mintAmount);
+            philanthropistAmount[msg.sender] += msg.value - (cost * _mintAmount);
         }
             // SPLIT PAYMENTS -- NEEDS TESTING
         payable(receiverOne).transfer(msg.value);
     }
 
         // GET A WALLETS OWNED TOKEN IDS
-    function getWalletOfOwner(address _owner) public view returns (uint256[] memory) {
+    function getWalletTokenIds(address _owner) public view returns (uint256[] memory) {
         uint256 ownerTokenCount = balanceOf(_owner);
         uint256[] memory tokenIds = new uint256[](ownerTokenCount);
         for (uint256 i; i < ownerTokenCount; i++) {
