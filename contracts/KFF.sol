@@ -21,7 +21,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     bool public isPaused = false;
     mapping(address => bool) public philanthropistList;
     mapping(address => uint256) public philanthropistAmount;
-    address public receiverOne = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;
+    address public receiver = 0x311F2A86C44f5040dbaB3D7442670343dFFFECDB;
     mapping(uint256 => uint256) public hodlStart;
     mapping(uint256 => string) public roles;
     mapping(uint256 => uint256) public ranking;
@@ -43,15 +43,16 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     }
 
         // FANCY MINT FUNCTION
-    function mint(address _to, uint256 _mintAmount) public payable {
+    function mint(address _to) public payable {
         uint256 supply = totalSupply();
         require(block.timestamp >= timeDeployed + allowMintingAfter, "Minting is still turned off");
-        require(_mintAmount > 0, "Mint must be greater than zero");
-        require(supply + _mintAmount <= maxSupply, "Maximum supply has been minted");
-        require(!isPaused, "Minting is currently paused");
-        require(msg.value >= cost * _mintAmount, "Not enough eth");
 
-        for (uint256 i = 1; i <= _mintAmount; i++) {
+        require(supply + 1 <= maxSupply, "Maximum supply has been minted");
+        require(!isPaused, "Minting is currently paused");
+        require(msg.value >= cost, "Not enough eth");
+
+        for (uint256 i = 1; i <= 1; i++) {
+            require( i == 1, "Only one mint per transaction");
             hodlStart[supply + i] = block.timestamp;
             ranking[supply + i] = 0;
             roles[supply + i] = "No Role";
@@ -59,12 +60,10 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         }
 
             // ADD TO PHILANTHROPIST LIST
-        if (msg.value > cost * _mintAmount) {
+        if (msg.value > cost) {
             philanthropistList[msg.sender] = true;
-            philanthropistAmount[msg.sender] += msg.value - (cost * _mintAmount);
+            philanthropistAmount[msg.sender] += msg.value - cost;
         }
-            // SPLIT PAYMENTS -- NEEDS TESTING
-        payable(receiverOne).transfer(msg.value);
     }
 
         // GET A WALLETS OWNED TOKEN IDS
@@ -168,6 +167,15 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
 
         // WITHDRAW FUNDS FROM CONTRACT
     function withdraw() public payable onlyOwner {
+        (bool success, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
+        require(success);
+    }
+
+        // BENEFACTOR WITHDRAW FUNDS FROM CONTRACT
+    function receiverWithdraw() public payable {
+        require(msg.sender == receiver, "You are not receiver");
         (bool success, ) = payable(msg.sender).call{
             value: address(this).balance
         }("");
