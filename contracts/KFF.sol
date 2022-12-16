@@ -23,7 +23,6 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     mapping(address => uint256) public philanthropistAmount;
     address public receiver = 0x311F2A86C44f5040dbaB3D7442670343dFFFECDB;
     mapping(uint256 => uint256) public hodlStart;
-    mapping(uint256 => string) public roles;
     mapping(uint256 => uint256) public ranking;
 
     constructor(
@@ -55,7 +54,6 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
             require( i == 1, "Only one mint per transaction");
             hodlStart[supply + i] = block.timestamp;
             ranking[supply + i] = 0;
-            roles[supply + i] = "No Role";
             _safeMint(_to, supply + i);
         }
 
@@ -122,17 +120,16 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     }
 
         // GET RANKING AND ROLE
-    function getRankingAndRole(uint256 tokenId) public view returns (uint256, string memory) {
+    function getRankingAndRole(uint256 tokenId) public view returns (uint256) {
         require(_exists(tokenId), "Token number does not exist");
-        return (ranking[tokenId], roles[tokenId]);
+        return ranking[tokenId];
     }
 
         // SET ROLE/TITLE
-    function setRole(uint256 tokenId, uint256 _ranking, string memory _roles) public payable onlyOwner {
+    function setRole(uint256 tokenId, uint256 _ranking) public payable onlyOwner {
         require(_exists(tokenId), "Token number does not exist");
         require(msg.sender == owner(), "You are not the owner");
         ranking[tokenId] = _ranking;
-        roles[tokenId] = _roles;
     }
 
         // GET BASE URI

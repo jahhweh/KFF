@@ -1,4 +1,4 @@
 {
     "solidity.defaultCompiler": "localFile",
-    "solidity.compileUsingLocalVersion": "c:\\Users\\zache\\Desktop\\GitHub\\KFF\\soljson-v0.8.17+commit.8df45f5f.js"
+    "solidity.compileUsingLocalVersion": "/Users/zacharyeidman/Desktop/Projects/KFF/soljson-v0.8.17+commit.8df45f5f.js"
 }
