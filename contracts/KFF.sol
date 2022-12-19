@@ -59,18 +59,15 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     // This will mint one token, start hodl time, set ranking to zero, 
     // and if applicable, add the wallet and amount donated to philanthropist list and philanthropist amount
     function mint(address _to) public payable {
-        uint256 supply = totalSupply();
+        uint256 tokenId = totalSupply() + 1;
         require(block.timestamp >= timeDeployed + allowMintingAfter, "Minting is still turned off");
-        require(supply + 1 <= maxSupply, "Maximum supply has been minted");
+        require(tokenId <= maxSupply, "Maximum supply has been minted");
         require(!isPaused, "Minting is currently paused");
         require(msg.value >= cost, "Not enough eth");
 
-        for (uint256 i = 1; i <= 1; i++) {
-            require( i == 1, "Only one mint per transaction");
-            hodlStart[supply + i] = block.timestamp;
-            ranking[supply + i] = 0;
-            _safeMint(_to, supply + i);
-        }
+        hodlStart[tokenId] = block.timestamp;
+        ranking[tokenId] = 0;
+        _safeMint(_to, tokenId);
 
             // ADD TO PHILANTHROPIST LIST
         if (msg.value > cost) {
