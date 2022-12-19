@@ -21,8 +21,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     string public baseExtension = ".json"; // this is the file extension of the metadata
     uint256 public cost = 100000000000000000; // this is the cost of minting one NFT, in wei 
     uint256 public maxSupply = 10001; // this is the maximum supply of NFTs 
-    uint256 public timeDeployed; // this is the time the contract was deployed, in UNIX/EPOCH time
-    uint256 public allowMintingAfter; // this is the time minting is allowed to begin, in UNIX/EPOCH time
+    uint256 public allowMintingOn; // this is the time minting is allowed to begin, in UNIX/EPOCH time
     bool public isPaused = false; // this is the toggle to pause and unpause minting
     mapping(address => bool) public philanthropistList; // this is a list of wallets that donated eth during mint, known as the philanthropist list
     mapping(address => uint256) public philanthropistAmount; // this is a list that tracks the total donated eth for wallet addresses, known as the philanthropist amount
@@ -42,10 +41,9 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
 
             // set the time minting is allowed to begin
         if (_allowMintingOn > block.timestamp) {
-            allowMintingAfter = _allowMintingOn - block.timestamp;
+            allowMintingOn = _allowMintingOn;
         }
             // lock in the variables
-        timeDeployed = block.timestamp;
         setBaseURI(_initBaseURI);
     }
 
@@ -58,7 +56,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     // and if applicable, add the wallet and amount donated to philanthropist list and philanthropist amount
     function mint(address _to) public payable {
         uint256 tokenId = totalSupply() + 1;
-        require(block.timestamp >= timeDeployed + allowMintingAfter, "Minting is still turned off");
+        require(block.timestamp >= allowMintingOn, "Minting is still turned off");
         require(tokenId <= maxSupply, "Maximum supply has been minted");
         require(!isPaused, "Minting is currently paused");
         require(msg.value >= cost, "Not enough eth");
