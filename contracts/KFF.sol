@@ -66,7 +66,6 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         require(msg.value >= cost, "Not enough eth");
 
         hodlStart[tokenId] = block.timestamp;
-        ranking[tokenId] = 0;
         _safeMint(_to, tokenId);
 
             // ADD TO PHILANTHROPIST LIST
