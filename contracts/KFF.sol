@@ -27,7 +27,6 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     mapping(address => uint256) public philanthropistAmount; // this is a list that tracks the total donated eth for wallet addresses, known as the philanthropist amount
     address public receiver = 0x311F2A86C44f5040dbaB3D7442670343dFFFECDB; // this is the beneficiary wallet
     mapping(uint256 => uint256) public hodlStart; // this is a list tracking the time a wallet received the NFT, known as hodl time
-    mapping(uint256 => uint256) public ranking; // this is an arbitrary number that can be given to specific NFTs
 
         // these are the variables required to deploy the contract
     constructor(
@@ -133,22 +132,6 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         require(_exists(tokenId), "Token number does not exist");
         uint256 _hodlStart = hodlStart[tokenId];
         return block.timestamp - _hodlStart;
-    }
-
-        // GET RANKING
-    // this gets the arbitrary number ranking of a specific NFT
-    function getRankingAndRole(uint256 tokenId) public view returns (uint256) {
-        require(_exists(tokenId), "Token number does not exist");
-        return ranking[tokenId];
-    }
-
-        // SET RANKING
-    // this sets the arbitrary number ranking of a specific NFT
-    // only the contract owner can use this function
-    function setRole(uint256 tokenId, uint256 _ranking) public payable onlyOwner {
-        require(_exists(tokenId), "Token number does not exist");
-        require(msg.sender == owner(), "You are not the owner");
-        ranking[tokenId] = _ranking;
     }
 
         // GET BASE URI
