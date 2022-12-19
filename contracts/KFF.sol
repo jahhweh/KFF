@@ -45,8 +45,6 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
             allowMintingAfter = _allowMintingOn - block.timestamp;
         }
             // lock in the variables
-        cost = cost;
-        maxSupply = maxSupply;
         timeDeployed = block.timestamp;
         setBaseURI(_initBaseURI);
     }
