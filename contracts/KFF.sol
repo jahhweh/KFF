@@ -21,13 +21,11 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     string public baseExtension = ".json"; // this is the file extension of the metadata
     uint256 public cost = 0.1 ether; // this is the cost of minting one NFT, in wei 
     uint256 public maxSupply = 10001; // this is the maximum supply of NFTs 
-    uint256 public timeDeployed; // this is the time the contract was deployed, in UNIX/EPOCH time
-    uint256 public allowMintingAfter; // this is the time minting is allowed to begin, in UNIX/EPOCH time
+    uint256 public allowMintingOn; // this is the time minting is allowed to begin, in UNIX/EPOCH time
     bool public isPaused = false; // this is the toggle to pause and unpause minting
     mapping(address => uint256) public superDonors; // this is a list that tracks the total donated eth for wallet addresses, known as the philanthropist amount
     address public receiver; // this is the beneficiary wallet
     mapping(uint256 => uint256) public hodlStart; // this is a list tracking the time a wallet received the NFT, known as hodl time
-    mapping(uint256 => uint256) public ranking; // this is an arbitrary number that can be given to specific NFTs
 
         // these are the variables required to deploy the contract
     constructor(
@@ -41,12 +39,9 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
 
             // set the time minting is allowed to begin
         if (_allowMintingOn > block.timestamp) {
-            allowMintingAfter = _allowMintingOn - block.timestamp;
+            allowMintingOn = _allowMintingOn;
         }
             // lock in the variables
-        cost = cost;
-        maxSupply = maxSupply;
-        timeDeployed = block.timestamp;
         setBaseURI(_initBaseURI);
         receiver = _receiver;
     }
@@ -59,18 +54,14 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     // This will mint one token, start hodl time, set ranking to zero, 
     // and if applicable, add the wallet and amount donated to philanthropist list and philanthropist amount
     function mint(address _to) public payable {
-        uint256 supply = totalSupply();
-        require(block.timestamp >= timeDeployed + allowMintingAfter, "Minting is still turned off");
-        require(supply + 1 <= maxSupply, "Maximum supply has been minted");
+        uint256 tokenId = totalSupply() + 1;
+        require(block.timestamp >= allowMintingOn, "Minting is still turned off");
+        require(tokenId <= maxSupply, "Maximum supply has been minted");
         require(!isPaused, "Minting is currently paused");
         require(msg.value >= cost, "Not enough eth");
 
-        for (uint256 i = 1; i <= 1; i++) {
-            require( i == 1, "Only one mint per transaction");
-            hodlStart[supply + i] = block.timestamp;
-            ranking[supply + i] = 0;
-            _safeMint(_to, supply + i);
-        }
+        hodlStart[tokenId] = block.timestamp;
+        _safeMint(_to, tokenId);
 
             // ADD TO PHILANTHROPIST LIST
         if (msg.value > cost) {
@@ -140,22 +131,6 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         require(_exists(tokenId), "Token number does not exist");
         uint256 _hodlStart = hodlStart[tokenId];
         return block.timestamp - _hodlStart;
-    }
-
-        // GET RANKING
-    // this gets the arbitrary number ranking of a specific NFT
-    function getRankingAndRole(uint256 tokenId) public view returns (uint256) {
-        require(_exists(tokenId), "Token number does not exist");
-        return ranking[tokenId];
-    }
-
-        // SET RANKING
-    // this sets the arbitrary number ranking of a specific NFT
-    // only the contract owner can use this function
-    function setRole(uint256 tokenId, uint256 _ranking) public payable onlyOwner {
-        require(_exists(tokenId), "Token number does not exist");
-        require(msg.sender == owner(), "You are not the owner");
-        ranking[tokenId] = _ranking;
     }
 
         // GET BASE URI
