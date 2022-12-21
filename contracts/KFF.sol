@@ -19,14 +19,13 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     // This defines the contracts variables
     string public baseURI; // this is the URL of the folder containing the metadata
     string public baseExtension = ".json"; // this is the file extension of the metadata
-    uint256 public cost = 100000000000000000; // this is the cost of minting one NFT, in wei 
+    uint256 public cost = 0.1 ether; // this is the cost of minting one NFT, in wei 
     uint256 public maxSupply = 10001; // this is the maximum supply of NFTs 
     uint256 public timeDeployed; // this is the time the contract was deployed, in UNIX/EPOCH time
     uint256 public allowMintingAfter; // this is the time minting is allowed to begin, in UNIX/EPOCH time
     bool public isPaused = false; // this is the toggle to pause and unpause minting
-    mapping(address => bool) public philanthropistList; // this is a list of wallets that donated eth during mint, known as the philanthropist list
-    mapping(address => uint256) public philanthropistAmount; // this is a list that tracks the total donated eth for wallet addresses, known as the philanthropist amount
-    address public receiver = 0x311F2A86C44f5040dbaB3D7442670343dFFFECDB; // this is the beneficiary wallet
+    mapping(address => uint256) public superDonors; // this is a list that tracks the total donated eth for wallet addresses, known as the philanthropist amount
+    address public receiver; // this is the beneficiary wallet
     mapping(uint256 => uint256) public hodlStart; // this is a list tracking the time a wallet received the NFT, known as hodl time
     mapping(uint256 => uint256) public ranking; // this is an arbitrary number that can be given to specific NFTs
 
@@ -35,8 +34,8 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         string memory _name, // the name 
         string memory _symbol, // the $TOKEN name
         uint256 _allowMintingOn, // the unix/epoch date to open minting
-        string memory _initBaseURI // the url of the metadata
-        
+        string memory _initBaseURI, // the url of the metadata
+        address _receiver
         // deploy!
     ) ERC721(_name, _symbol) {
 
@@ -49,6 +48,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         maxSupply = maxSupply;
         timeDeployed = block.timestamp;
         setBaseURI(_initBaseURI);
+        receiver = _receiver;
     }
 
     // All of the below functions are custom for this contract, 
@@ -74,8 +74,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
 
             // ADD TO PHILANTHROPIST LIST
         if (msg.value > cost) {
-            philanthropistList[msg.sender] = true;
-            philanthropistAmount[msg.sender] += msg.value - cost;
+            superDonors[msg.sender] += msg.value - cost;
         }
     }
 
@@ -175,8 +174,8 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         // GET PHILANTHROPIST LIST
     // this checks if a wallet is on the philanthropy list
     // and the total amount donated
-    function getPhilanthropistList(address _user) public view returns (bool, uint256) {
-        return (philanthropistList[_user], philanthropistAmount[_user]);
+    function getSuperDonors(address _user) public view returns (uint256) {
+        return (superDonors[_user]);
     }
 
         // CHANGE THE MAIN METADATA HYPERLINK
@@ -200,22 +199,17 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         isPaused = _state;
     }
 
-        // WITHDRAW FUNDS FROM CONTRACT
-    // this withdraws all the eth in the contract
-    // only the contract owner can use this function
-    function withdraw() public payable onlyOwner {
-        (bool success, ) = payable(msg.sender).call{
-            value: address(this).balance
-        }("");
-        require(success);
+        // SET THE RECEIVER ADDRESS
+    // this allows the contract owner to set the benefactor address
+    function setReceiver(address _user) public onlyOwner {
+        receiver = _user;
     }
 
-        // BENEFACTOR WITHDRAW FUNDS FROM CONTRACT
+        // RECEIVER WITHDRAW FUNDS FROM CONTRACT
     // this withdraws all the eth in the contract
     // only the benefactor can use this function
     function receiverWithdraw() public payable {
-        require(msg.sender == receiver, "You are not receiver");
-        (bool success, ) = payable(msg.sender).call{
+        (bool success, ) = payable(receiver).call{
             value: address(this).balance
         }("");
         require(success);
