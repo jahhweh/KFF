@@ -23,9 +23,11 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
     uint256 public maxSupply = 10001; // this is the maximum supply of NFTs 
     uint256 public allowMintingOn; // this is the time minting is allowed to begin, in UNIX/EPOCH time
     bool public isPaused = false; // this is the toggle to pause and unpause minting
-    mapping(address => uint256) public superDonors; // this is a list that tracks the total donated eth for wallet addresses, known as the philanthropist amount
+    mapping(address => uint256) public superDonors; // this is a list that tracks the total donated eth for wallet addresses
     address public receiver; // this is the beneficiary wallet
     mapping(uint256 => uint256) public hodlStart; // this is a list tracking the time a wallet received the NFT, known as hodl time
+    uint256 internal _burnCount;
+    address[] internal _tokens = [address(0x0)];
 
         // these are the variables required to deploy the contract
     constructor(
@@ -33,7 +35,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         string memory _symbol, // the $TOKEN name
         uint256 _allowMintingOn, // the unix/epoch date to open minting
         string memory _initBaseURI, // the url of the metadata
-        address _receiver
+        address _receiver // the benefactors wallet
         // deploy!
     ) ERC721(_name, _symbol) {
 
@@ -52,7 +54,7 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
 
         // MINT FUNCTION
     // This will mint one token, start hodl time, set ranking to zero, 
-    // and if applicable, add the wallet and amount donated to philanthropist list and philanthropist amount
+    // and if applicable, add the wallet and amount donated to superDonors list
     function mint(address _to) public payable {
         uint256 tokenId = totalSupply() + 1;
         require(block.timestamp >= allowMintingOn, "Minting is still turned off");
@@ -62,8 +64,9 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
 
         hodlStart[tokenId] = block.timestamp;
         _safeMint(_to, tokenId);
+        _tokens.push(_to);
 
-            // ADD TO PHILANTHROPIST LIST
+            // ADD TO SUPERDONORS LIST
         if (msg.value > cost) {
             superDonors[msg.sender] += msg.value - cost;
         }
@@ -125,6 +128,37 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         hodlStart[tokenId] = block.timestamp;
     }
 
+        // OVERRIDE TOTALSUPPLY TO ACCOUNT FOR BURNT TOKENS
+    // this function overrides the totalSupply function
+    // and returns "supply" which is a list of all addresses
+    // that hold an NFT, except for NFTs at the burn address
+    function totalSupply() public view virtual override returns (uint256) {
+    uint256 supply = 0;
+    for (uint256 i = 0; i < _tokens.length; i++) {
+        if (_tokens[i] != address(0)) {
+            supply += 1;
+        }
+    }
+    return supply;
+    }
+
+        // OVERRIDE BURN TO TRACK TOTAL TOKENS BURNT
+    // this function overrides the burn function to
+    // track the total amount of NFTs that have been
+    // sent to the burn address
+    function burn(uint256 tokenId) public virtual override {
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+        _burn(tokenId);
+        _burnCount++;
+    }
+
+        // GET CIRCULATING SUPPLY
+    // this function gets the current supply
+    // in circulation (ie: total supply - burnt NFTs)
+    function getCirculatingSupply() public view returns (uint256) {
+        return totalSupply() - _burnCount;
+    }
+
         // GET HODLTIME
     // this gets the total hodl time for a specific NFT, in seconds
     function getHodlTime(uint256 tokenId) public view returns (uint256) {
@@ -146,9 +180,9 @@ contract KFF is ERC721, ERC721Enumerable, Pausable, Ownable, ERC721Burnable {
         cost = _newCost;
     }
 
-        // GET PHILANTHROPIST LIST
-    // this checks if a wallet is on the philanthropy list
-    // and the total amount donated
+        // GET SUPERDONORS LIST
+    // this checks if a wallet is on the superDonors list
+    // and get the total amount donated in wei
     function getSuperDonors(address _user) public view returns (uint256) {
         return (superDonors[_user]);
     }
